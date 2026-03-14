@@ -85,6 +85,7 @@ This folder has **zero dependencies** outside itself:
 - ✅ All paths are relative
 
 You can:
+
 - 📁 Move it anywhere
 - 💾 Share it via Git/email
 - 👥 Give it to teammates
@@ -128,15 +129,15 @@ Results go to `outputs/results-simple.json`
 
 ## Common Commands
 
-| Command | What it does |
-|---------|------------|
-| `npm install` | Install all dependencies (one-time) |
-| `npm run eval` | Run simple evaluation |
-| `npm run eval:advanced` | Run with more providers |
-| `npm run setup:db` | Create database tables |
-| `npm run sync:batch` | Save results to database |
+| Command                    | What it does                                 |
+| -------------------------- | -------------------------------------------- |
+| `npm install`              | Install all dependencies (one-time)          |
+| `npm run eval`             | Run simple evaluation                        |
+| `npm run eval:advanced`    | Run with more providers                      |
+| `npm run setup:db`         | Create database tables                       |
+| `npm run sync:batch`       | Save results to database                     |
 | `npm run dashboard:simple` | Start web dashboard on http://localhost:8080 |
-| `npm run dev` | Start API server for querying results |
+| `npm run dev`              | Start API server for querying results        |
 
 ## Troubleshooting
 
@@ -163,13 +164,13 @@ Results go to `outputs/results-simple.json`
 
 ## How Standalone Differs from Examples
 
-| Aspect | Example in Repo | Standalone |
-|--------|-----------------|-----------|
-| **Copied from** | docs copy full folder | You copy this folder |
-| **npm install** | Installs promptfoo | Installs promptfoo |
-| **File paths** | Relative to here | Relative to here |
+| Aspect           | Example in Repo          | Standalone               |
+| ---------------- | ------------------------ | ------------------------ |
+| **Copied from**  | docs copy full folder    | You copy this folder     |
+| **npm install**  | Installs promptfoo       | Installs promptfoo       |
+| **File paths**   | Relative to here         | Relative to here         |
 | **Dependencies** | Explicit in package.json | Explicit in package.json |
-| **Move it** | Fully portable | Fully portable |
+| **Move it**      | Fully portable           | Fully portable           |
 
 ## Share with Others
 

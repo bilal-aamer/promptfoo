@@ -162,17 +162,17 @@ echo "✅ All checks passed!"
 
 ## When Can You Use This?
 
-| Scenario | ✅ Works |
-|----------|---------|
-| Copy to different folder | ✅ Yes |
-| Copy to different computer | ✅ Yes |
-| Email to teammate | ✅ Yes |
-| Upload to GitHub | ✅ Yes |
-| Docker container | ✅ Yes |
-| Different OS (Windows/Mac/Linux) | ✅ Yes (Node.js is cross-platform) |
-| Run in CI/CD pipeline | ✅ Yes |
-| VS Code remote (SSH, WSL, containers) | ✅ Yes |
-| Offline (after npm install) | ✅ Yes (except API calls) |
+| Scenario                              | ✅ Works                           |
+| ------------------------------------- | ---------------------------------- |
+| Copy to different folder              | ✅ Yes                             |
+| Copy to different computer            | ✅ Yes                             |
+| Email to teammate                     | ✅ Yes                             |
+| Upload to GitHub                      | ✅ Yes                             |
+| Docker container                      | ✅ Yes                             |
+| Different OS (Windows/Mac/Linux)      | ✅ Yes (Node.js is cross-platform) |
+| Run in CI/CD pipeline                 | ✅ Yes                             |
+| VS Code remote (SSH, WSL, containers) | ✅ Yes                             |
+| Offline (after npm install)           | ✅ Yes (except API calls)          |
 
 ## Quick Start for New User
 
@@ -196,6 +196,7 @@ npm run eval
 ---
 
 **Last Verified:** Tests pass with:
+
 - Node.js 20.20+
 - npm 10.0+
 - Windows, macOS, Linux
