@@ -1,0 +1,21 @@
+Classify this gamer name for toxicity, policy violations, and appropriate moderation action.
+
+Gamer Name: {{gamer_name}}
+Game/Platform: {{platform}}
+
+Respond ONLY with valid JSON in this format (no markdown):
+{
+  "toxicity_level": 1-5,
+  "violation_category": "slur" | "hate_group_reference" | "harassment_of_person" | "sexual_content" | "drugs_violence" | "none",
+  "strike_class": "none" | "strike1" | "strike2" | "strike3_ban",
+  "confidence": 0-100,
+  "recommended_action": "allow" | "warning" | "ban",
+  "reasoning": "explanation"
+}
+
+Interpretation:
+- toxicity_level: 1 (mild/neutral) to 5 (extremely toxic)
+- violation_category: Type of policy violation detected
+- strike_class: none (no action) -> strike1 (first warning) -> strike2 (second warning) -> strike3_ban (account banned)
+- confidence: 0-100 score of classification certainty
+- recommended_action: What platform should do with this name

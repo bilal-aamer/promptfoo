@@ -1,0 +1,53 @@
+# yaml-language-server: $schema=https://promptfoo.dev/config-schema.json
+
+description: 'Simple Moderation Bot - Get Started Quick'
+
+# Just pick a couple models for quick testing
+prompts:
+  - "Analyze this Discord message for violations:\n\nMessage: {{message}}\n\nRespond with JSON: {is_toxic: bool, violation: string, action: string}"
+
+providers:
+  # Azure OpenAI (recommended for production)
+  - id: azure:openai:gpt-4o
+    config:
+      apiKey: ${AZURE_OPENAI_API_KEY}
+      apiBase: ${AZURE_OPENAI_ENDPOINT}
+      deploymentId: ${AZURE_OPENAI_DEPLOYMENT_ID}
+      temperature: 0.7
+      max_tokens: 500
+
+  # OpenRouter as cheaper alternative
+  - id: openrouter:meta-llama/llama-4-scout:free
+    config:
+      apiKey: ${OPENROUTER_API_KEY}
+      temperature: 0.7
+      max_tokens: 500
+
+# Simple test dataset
+tests:
+  - vars:
+      message: 'hey everyone, great game!'
+    assert:
+      - type: contains
+        value: is_toxic
+      - type: javascript
+        value: 'output => JSON.parse(output).is_toxic === false'
+
+  - vars:
+      message: 'I hate all people from country X'
+    assert:
+      - type: javascript
+        value: 'output => JSON.parse(output).is_toxic === true'
+
+  - vars:
+      message: 'Anyone want to grab lunch after work?'
+    assert:
+      - type: javascript
+        value: "output => JSON.parse(output).violation === 'none'"
+
+# Tweak these for your needs
+maxConcurrency: 2
+timeout: 30
+
+# Where to save results
+outputPath: ./outputs/results-simple.json

@@ -1,0 +1,11 @@
+message,server_type,expected_toxic
+"hey everyone great game today!",gaming,false
+"I hate all people from country X",community,true
+"Anyone want to grab lunch after work?",social,false
+"You're an idiot and should quit",gaming,true
+"The pizza was good last night",food,false
+"I want to harm that person",community,true
+"What's your favorite movie?",social,false
+"Check out this cool new feature!",gaming,false
+"All X people should be banned",community,true
+"Thanks for the help buddy!",social,false

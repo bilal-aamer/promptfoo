@@ -1,0 +1,179 @@
+# yaml-language-server: $schema=https://promptfoo.dev/config-schema.json
+
+description: 'Advanced Multi-Provider Moderation Evaluations with Dynamic CSV Data'
+
+# ============================================================================
+# PROMPT TEMPLATES
+# ============================================================================
+
+prompts:
+  # Discord Moderator
+  - id: discord-prompt
+    content: |
+      You are a Discord server moderator AI. Analyze the following message for potential rule violations.
+
+      Message: {{message}}
+      Server Context: {{server_type}}
+
+      Respond with JSON:
+      {
+        "is_toxic": boolean,
+        "violation_type": "hate_speech" | "harassment" | "spam" | "adult_content" | "none",
+        "severity": 1-5 (1=mild, 5=extreme),
+        "recommended_action": "none" | "silent_delete" | "warning" | "mute" | "kick" | "ban",
+        "confidence": 0-100,
+        "reasoning": "explanation"
+      }
+
+  # Forum Rewriter
+  - id: forum-prompt
+    content: |
+      You are a community moderation AI. Rewrite the following forum post to remove toxicity while preserving the original intent.
+
+      Original Post: {{post_content}}
+      Topic Category: {{category}}
+
+      Please provide:
+      1. Rewritten version (friendly and constructive)
+      2. Issues found (list)
+      3. Tone analysis (before and after)
+
+  # Gamer Names
+  - id: gamer-prompt
+    content: |
+      Classify this gamer name for toxicity and policy violations.
+
+      Gamer Name: {{gamer_name}}
+      Game/Platform: {{platform}}
+
+      Respond with JSON:
+      {
+        "toxicity_level": 1-5,
+        "violation_category": "slur" | "hate_group" | "harassment_person" | "sexual" | "drugs_violence" | "none",
+        "strike_class": "none" | "strike1" | "strike2" | "strike3_ban",
+        "confidence": 0-100,
+        "action": "allow" | "warning" | "ban",
+        "reasoning": "short explanation"
+      }
+
+# ============================================================================
+# PROVIDERS - 5 Different Endpoints
+# ============================================================================
+
+providers:
+  # 1. Azure OpenAI - Production Grade
+  - id: azure:gpt-4o
+    config:
+      apiKey: ${AZURE_OPENAI_API_KEY}
+      apiBase: ${AZURE_OPENAI_ENDPOINT}
+      deploymentId: ${AZURE_OPENAI_DEPLOYMENT_ID}
+      model: gpt-4o
+      temperature: 0.7
+      max_tokens: 1000
+      top_p: 0.9
+
+  # 2. Azure OpenAI - Budget Option
+  - id: azure:gpt-4o-mini
+    config:
+      apiKey: ${AZURE_OPENAI_API_KEY}
+      apiBase: ${AZURE_OPENAI_ENDPOINT}
+      deploymentId: ${AZURE_OPENAI_DEPLOYMENT_ID}
+      model: gpt-4o-mini
+      temperature: 0.5
+      max_tokens: 500
+
+  # 3. Custom Bearer Token Endpoint
+  - id: custom:bearer-endpoint
+    config:
+      apiKey: ${CUSTOM_BEARER_TOKEN}
+      apiBase: ${CUSTOM_ENDPOINT_URL}
+      model: custom-llm
+      temperature: 0.6
+      max_tokens: 750
+
+  # 4. OpenRouter - Llama Scout (Free)
+  - id: openrouter:llama-scout
+    config:
+      apiKey: ${OPENROUTER_API_KEY}
+      model: meta-llama/llama-4-scout:free
+      temperature: 0.7
+      max_tokens: 1000
+
+  # 5. OpenRouter - Llama Maverick (Better Quality)
+  - id: openrouter:llama-maverick
+    config:
+      apiKey: ${OPENROUTER_API_KEY}
+      model: meta-llama/llama-4-maverick:free
+      temperature: 0.5
+      max_tokens: 2000
+
+# ============================================================================
+# TEST DATA - From CSV File
+# ============================================================================
+
+tests:
+  # Option 1: Minimal inline tests
+  - vars:
+      message: 'Hey! Great game today!'
+      server_type: 'gaming'
+      gamer_name: 'ProGamer123'
+      platform: 'Discord'
+      post_content: 'This feature is terrible'
+      category: 'feature-request'
+    assert:
+      - type: contains
+        value: is_toxic
+      - type: javascript
+        value: 'output => output.length > 10'
+
+  - vars:
+      message: 'I hate that group of people'
+      server_type: 'community'
+      gamer_name: 'H8SpechLord'
+      platform: 'Steam'
+      post_content: "Your idea is stupid and you're dumb"
+      category: 'feedback'
+    assert:
+      - type: javascript
+        value: 'output => JSON.parse(output).is_toxic === true'
+
+# ============================================================================
+# ADVANCED CONFIGURATION
+# ============================================================================
+
+defaultTest:
+  model_graded: true
+  threshold: 0.8
+
+# Concurrency & Timing
+maxConcurrency: 4
+timeout: 60
+retryPolicy:
+  maxAttempts: 2
+  delay: 1000
+
+# Output & Reporting
+outputPath: ./outputs/advanced-results.json
+noCachePath: false
+
+# Enable shared cache for faster re-runs
+cacheDir: ~/.cache/promptfoo
+
+# ============================================================================
+# NOTES FOR EXTENSION
+# ============================================================================
+
+# To load tests from CSV file:
+# 1. Create data/moderation-tests.csv with columns: message, server_type, gamer_name, etc.
+# 2. Use a custom test loader in src/utils/csv-loader.ts
+# 3. Reference in tasks.yaml or call: npm run eval:csv
+
+# To add custom assertions:
+# 1. Add to src/utils/custom-assertions.ts
+# 2. Reference with: type: javascript
+# 3. Example: value: "output => customAssertions.noPromptInjection(output)"
+
+# To enable database sync:
+# 1. Set up .env with database credentials
+# 2. After eval completes, run: npm run sync:batch
+# 3. Or use plugin hook in promptfooconfig with onTestComplete callback

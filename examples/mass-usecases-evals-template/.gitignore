@@ -1,0 +1,71 @@
+# Dependencies
+node_modules/
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Build
+dist/
+build/
+*.tsbuildinfo
+
+# Database
+*.db
+sqlite.db
+*.sqlite
+*.sqlite3
+
+# Cache
+.cache/
+~/.cache/promptfoo
+.promptfoo-cache
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Outputs & Results
+outputs/
+results/
+reports/
+*.json
+!promptfooconfig.*.json
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Temporary
+tmp/
+temp/
+.env.*.tmp
+
+# OS
+Thumbs.db
+.DS_Store
+
+# API Keys & Secrets (NEVER commit these!)
+.env
+.env.production
+.env.local
+secrets.json
+credentials.json
+
+# Don't commit actual results
+outputs/**
+!outputs/.gitkeep
+
+# SQLite database files
+*.db
+*.db-shm
+*.db-wal

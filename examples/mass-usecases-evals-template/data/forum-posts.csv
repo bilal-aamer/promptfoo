@@ -1,0 +1,11 @@
+post_content,category,author_history,expected_toxicity_level
+"This feature sucks and whoever built it is incompetent",feature-request,new,high
+"I understand the design decision but I think we could improve X",feedback,established,low
+"Your stupid idea will never work",feature-request,banned_before,high
+"Has anyone considered using approach X instead?",discussion,new,low
+"I hate moderators and this community is trash",off-topic,banned_before,high
+"Thanks for fixing the bug! Much appreciated",praise,established,low
+"Why is everyone so dumb on this platform?",complaint,new,high
+"The documentation could be clearer here - suggestion: add example",docs,established,low
+"All members from region Y should leave",regional,banned_before,high
+"Looking forward to the next update!",general,established,low
