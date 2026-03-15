@@ -7,7 +7,7 @@ import {
   boolean,
   timestamp,
   json,
-  enum as mysqlEnum,
+  mysqlEnum,
   primaryKey,
   foreignKey,
   index,
@@ -398,7 +398,7 @@ export const projectsRelations = relations(projects, ({ one, many }) => ({
   auditLogs: many(auditLogs),
 }));
 
-export const prompts Relations = relations(prompts, ({ one, many }) => ({
+export const promptsRelations = relations(prompts, ({ one, many }) => ({
   project: one(projects, {
     fields: [prompts.projectId],
     references: [projects.id],

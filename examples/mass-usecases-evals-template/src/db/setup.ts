@@ -46,7 +46,7 @@ async function createDb() {
       queueLimit: 0,
     });
 
-    db = drizzle(pool, { schema });
+    db = drizzle(pool, { schema, mode: 'default' });
     console.log('✅ Connected to MySQL');
   }
 

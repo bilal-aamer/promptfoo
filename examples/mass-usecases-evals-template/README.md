@@ -25,18 +25,24 @@ cd mass-usecases-evals-template
 ### 2. Install dependencies
 
 ```bash
-npm install
+npm install --ignore-scripts
 ```
 
-### 3. Copy the env file and fill in your keys
+**Note:** If you're on Windows and see a `better-sqlite3` build error, use `--ignore-scripts` to skip the native module compilation. This won't affect functionality — you can still use all features with OpenRouter or other providers.
+
+### 3. Copy the env file and add your API keys
 
 ```bash
 cp .env.example .env
-# Edit .env and add your API keys:
-# - AZURE_OPENAI_API_KEY
-# - CUSTOM_BEARER_TOKEN
-# - OPENROUTER_API_KEY
 ```
+
+Then edit `.env` and add at least ONE of these:
+
+- **OpenRouter** (FREE): Get key at https://openrouter.ai/account/api-keys → paste into `OPENROUTER_API_KEY`
+- **Azure OpenAI**: Add `AZURE_OPENAI_API_KEY`, `AZURE_OPENAI_ENDPOINT`, `AZURE_OPENAI_DEPLOYMENT_ID`
+- **Custom Endpoint**: Set `CUSTOM_ENDPOINT_URL` and `CUSTOM_BEARER_TOKEN`
+
+**Quickest option:** Use OpenRouter (free, works immediately)
 
 ### 4. Pick a simple config and run
 
@@ -294,10 +300,25 @@ A: Yes! Run `npm run local -- eval -c config.yaml` and check results in JSON out
 
 ## Troubleshooting
 
+**Error: "better-sqlite3" build failed / Windows SDK not found**
+
+- ✅ On Windows? Use: `npm install --ignore-scripts`
+- ✅ This skips native module compilation but doesn't affect functionality
+- ✅ You can still use all providers (Azure, OpenRouter, custom endpoints)
+
+**Error: "API error: Missing Authentication header (401)"**
+
+- ✅ Check that `OPENROUTER_API_KEY` in `.env` is filled in correctly
+- ✅ Get a free key at https://openrouter.ai/account/api-keys
+- ✅ If using Azure OpenAI, make sure all three values are set:
+  - `AZURE_OPENAI_API_KEY`
+  - `AZURE_OPENAI_ENDPOINT`
+  - `AZURE_OPENAI_DEPLOYMENT_ID`
+
 **Error: "API key not found"**
 
 - ✅ Edit `.env` file and add your keys
-- ✅ Run `npm run local -- eval --env-file .env`
+- ✅ Make sure you ran `cp .env.example .env` first
 
 **Error: "Database connection refused"**
 
@@ -307,8 +328,8 @@ A: Yes! Run `npm run local -- eval -c config.yaml` and check results in JSON out
 
 **Error: "Module not found"**
 
-- ✅ Run `npm install` again
-- ✅ Delete `node_modules/` and run `npm install` fresh
+- ✅ Run `npm install --ignore-scripts` again
+- ✅ Delete `node_modules/` and run `npm install --ignore-scripts` fresh
 
 ## Need Help?
 
