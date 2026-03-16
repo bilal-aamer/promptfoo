@@ -1,0 +1,215 @@
+# yaml-language-server: $schema=https://promptfoo.dev/config-schema.json
+description: 'reev-aiRecommendation — EA Petition Assistant multi-model evaluation'
+
+# ─── Prompts ──────────────────────────────────────────────────────────────────
+# The prompt is the reported player content. It is passed as {{prompt}} into
+# each provider's request body via the reportedContent field.
+prompts:
+  - '{{reportedContent}}'
+
+# ─── Providers ────────────────────────────────────────────────────────────────
+# Each provider represents one model deployment of the Petition Assistant API.
+# Model routing is server-side — each variant lives on a different base URL.
+# Set PETITION_BEARER_TOKEN in your .env before running (see README).
+providers:
+  - id: http
+    label: GPT-4o (UAT)
+    config:
+      url: '{{env.PETITION_API_BASE_URL_GPT4O}}'
+      method: POST
+      headers:
+        Content-Type: application/json
+        Authorization: 'Bearer {{env.PETITION_BEARER_TOKEN}}'
+      body:
+        isOpenSearchActive: false
+        contentType: NAME
+        petitionUUID: '{{petitionUUID}}'
+        reportedContent: '{{prompt}}'
+      # Unwrap the outer "response" envelope so assertions work on the inner object
+      transformResponse: 'json.response'
+
+  - id: http
+    label: GPT-4.1 (DEV)
+    config:
+      url: '{{env.PETITION_API_BASE_URL_GPT4_1}}'
+      method: POST
+      headers:
+        Content-Type: application/json
+        Authorization: 'Bearer {{env.PETITION_BEARER_TOKEN}}'
+      body:
+        isOpenSearchActive: false
+        contentType: NAME
+        petitionUUID: '{{petitionUUID}}'
+        reportedContent: '{{prompt}}'
+      transformResponse: 'json.response'
+
+  - id: http
+    label: GPT-5 (DEV)
+    config:
+      url: '{{env.PETITION_API_BASE_URL_GPT5}}'
+      method: POST
+      headers:
+        Content-Type: application/json
+        Authorization: 'Bearer {{env.PETITION_BEARER_TOKEN}}'
+      body:
+        isOpenSearchActive: false
+        contentType: NAME
+        petitionUUID: '{{petitionUUID}}'
+        reportedContent: '{{prompt}}'
+      transformResponse: 'json.response'
+
+  - id: http
+    label: GPT-5mini (DEV)
+    config:
+      url: '{{env.PETITION_API_BASE_URL_GPT5MINI}}'
+      method: POST
+      headers:
+        Content-Type: application/json
+        Authorization: 'Bearer {{env.PETITION_BEARER_TOKEN}}'
+      body:
+        isOpenSearchActive: false
+        contentType: NAME
+        petitionUUID: '{{petitionUUID}}'
+        reportedContent: '{{prompt}}'
+      transformResponse: 'json.response'
+
+# ─── Default Assertions (applied to every test case) ─────────────────────────
+defaultTest:
+  assert:
+    # Response envelope must expose a recommendedCategory object
+    - type: javascript
+      value: |
+        output && typeof output === 'object' && output.recommendedCategory !== undefined
+      metric: has_recommended_category
+
+    # Category must be a non-empty string
+    - type: javascript
+      value: |
+        output &&
+        output.recommendedCategory &&
+        typeof output.recommendedCategory.category === 'string' &&
+        output.recommendedCategory.category.length > 0
+      metric: category_is_present
+
+    # Confidence must be one of the accepted enum values
+    - type: javascript
+      value: |
+        output &&
+        output.recommendedCategory &&
+        ['HIGH', 'MEDIUM', 'LOW'].includes(output.recommendedCategory.confidence)
+      metric: valid_confidence_level
+
+    # Explanation must be a non-empty string
+    - type: javascript
+      value: |
+        output &&
+        output.recommendedCategory &&
+        typeof output.recommendedCategory.explanation === 'string' &&
+        output.recommendedCategory.explanation.length > 0
+      metric: has_explanation
+
+    # Top-level flagged field must be a boolean
+    - type: javascript
+      value: "output && typeof output.flagged === 'boolean'"
+      metric: has_flagged_field
+
+# ─── Test Cases ───────────────────────────────────────────────────────────────
+tests:
+  # ── SAFE — should not be flagged ──────────────────────────────────────────
+  - description: 'Safe: end-of-match banter'
+    vars:
+      reportedContent: 'gg easy lol'
+      petitionUUID: 'TEST-SAFE-001'
+    assert:
+      - type: javascript
+        value: 'output.flagged === false'
+        metric: expected_not_flagged
+
+  - description: 'Safe: genuine compliment'
+    vars:
+      reportedContent: 'great game! well played everyone'
+      petitionUUID: 'TEST-SAFE-002'
+    assert:
+      - type: javascript
+        value: 'output.flagged === false'
+        metric: expected_not_flagged
+
+  - description: 'Safe: generic username with no context'
+    vars:
+      reportedContent: 'xX_ShadowWolf_Xx'
+      petitionUUID: 'TEST-SAFE-003'
+    assert:
+      - type: javascript
+        value: 'output.flagged === false'
+        metric: expected_not_flagged
+
+  # ── HARASSMENT — should be flagged ────────────────────────────────────────
+  - description: 'Flagged: direct personal insult'
+    vars:
+      reportedContent: 'you are absolute garbage and should uninstall the game you stupid moron'
+      petitionUUID: 'TEST-HARASS-001'
+    assert:
+      - type: javascript
+        value: 'output.flagged === true'
+        metric: expected_flagged
+
+  - description: 'Flagged: targeted harassment'
+    vars:
+      reportedContent: 'I hope you and your family get cancer, piece of trash'
+      petitionUUID: 'TEST-HARASS-002'
+    assert:
+      - type: javascript
+        value: 'output.flagged === true'
+        metric: expected_flagged
+      - type: javascript
+        value: |
+          output.recommendedCategory &&
+          output.recommendedCategory.strike !== '' &&
+          output.recommendedCategory.strike !== undefined
+        metric: strike_assigned_for_severe_violation
+
+  # ── HATE SPEECH — should be flagged with strike ───────────────────────────
+  - description: 'Flagged: hate speech with slur'
+    vars:
+      reportedContent: 'f*** all you [slur] players, get out of my lobby'
+      petitionUUID: 'TEST-HATE-001'
+    assert:
+      - type: javascript
+        value: 'output.flagged === true'
+        metric: expected_flagged
+      - type: javascript
+        value: |
+          output.recommendedCategory &&
+          Array.isArray(output.recommendedCategory.flagged_terms) &&
+          output.recommendedCategory.flagged_terms.length > 0
+        metric: flagged_terms_populated
+
+  # ── EDGE CASES ────────────────────────────────────────────────────────────
+  - description: 'Edge: empty reportedContent'
+    vars:
+      reportedContent: ''
+      petitionUUID: 'TEST-EDGE-001'
+    assert:
+      - type: javascript
+        value: 'output !== null && output !== undefined'
+        metric: handles_empty_gracefully
+
+  - description: 'Edge: non-English content'
+    vars:
+      reportedContent: 'je vais te tuer dans le jeu espèce de nul'
+      petitionUUID: 'TEST-EDGE-002'
+
+  - description: 'Edge: content near token boundary (verbose insult chain)'
+    vars:
+      reportedContent: 'noob noob noob you are the worst player i have ever seen in my entire life you should stop playing this game forever you are bringing the whole team down every single round and i cannot believe you are this bad'
+      petitionUUID: 'TEST-EDGE-003'
+
+  # ── LOAD FROM CSV (uncomment to run against your full test dataset) ────────
+  # Columns used: Id → petitionUUID, Description → reportedContent
+  # - file: ../../../data/AI PetitionAssitant/Input Files/test_aiRecommendation_chat.csv
+  #   vars:
+  #     petitionUUID: Id
+  #     reportedContent: Description
+
+# ─── Output ───────────────────────────────────────────────────────────────────
+outputPath: /data/outputs/promptfoo-names-PA.csv

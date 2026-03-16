@@ -1,0 +1,92 @@
+# yaml-language-server: $schema=https://promptfoo.dev/config-schema.json
+description: 'reev-aiRecommendation — ProdData2k batch evaluation (UAT, single endpoint)'
+
+# ─── Prompts ──────────────────────────────────────────────────────────────────
+# The prompt carries the reportedContent value for each row; it is forwarded
+# unchanged into the request body via {{prompt}}.
+prompts:
+  - '{{reportedContent}}'
+
+# ─── Provider ─────────────────────────────────────────────────────────────────
+# Single UAT endpoint. Set PETITION_BEARER_TOKEN in your .env before running.
+providers:
+  - id: http
+    label: 'UAT Petition Assistant'
+    config:
+      url: 'https://uatorionnebula-internal.itcloud.ea.com/petition-assistant/api/v1/recommendations'
+      method: POST
+      headers:
+        Content-Type: application/json
+        Authorization: 'Bearer {{env.PETITION_BEARER_TOKEN}}'
+      body:
+        isOpenSearchActive: false
+        # contentType is dynamic per row (PERSONANAME or NAME from the CSV).
+        # We alias the column to 'contentType' in the vars mapping below to avoid
+        # Nunjucks dot-notation issues with the raw column name.
+        contentType: '{{contentType}}'
+        petitionUUID: '{{petitionUUID}}'
+        reportedContent: '{{prompt}}'
+      # Unwrap the outer "response" envelope so assertions and the merge script
+      # operate directly on the inner object: { recommendedCategory, flagged, … }
+      transformResponse: 'json.response'
+
+# ─── Default Assertions (applied to every row) ────────────────────────────────
+defaultTest:
+  assert:
+    # Response must expose a recommendedCategory object
+    - type: javascript
+      value: |
+        output && typeof output === 'object' && output.recommendedCategory !== undefined
+      metric: has_recommended_category
+
+    # Category must be a non-empty string
+    - type: javascript
+      value: |
+        output &&
+        output.recommendedCategory &&
+        typeof output.recommendedCategory.category === 'string' &&
+        output.recommendedCategory.category.length > 0
+      metric: category_is_present
+
+    # Confidence must be one of the accepted enum values
+    - type: javascript
+      value: |
+        output &&
+        output.recommendedCategory &&
+        ['HIGH', 'MEDIUM', 'LOW'].includes(output.recommendedCategory.confidence)
+      metric: valid_confidence_level
+
+    # Explanation must be a non-empty string
+    - type: javascript
+      value: |
+        output &&
+        output.recommendedCategory &&
+        typeof output.recommendedCategory.explanation === 'string' &&
+        output.recommendedCategory.explanation.length > 0
+      metric: has_explanation
+
+    # Top-level flagged field must be a boolean
+    - type: javascript
+      value: "output && typeof output.flagged === 'boolean'"
+      metric: has_flagged_field
+
+# ─── Test Cases ───────────────────────────────────────────────────────────────
+# All 2 000 rows from ProdData2k.csv are loaded as individual test cases.
+# Column mapping:
+#   reportedContent  ←  Description             (the text to moderate)
+#   petitionUUID     ←  Id                      (Salesforce case ID)
+#   contentType      ←  Petition_Details__r.Content_Type__c  (PERSONANAME | NAME)
+#
+# To dry-run on a small subset first, add `limit: 5` below the `file:` line.
+tests:
+  - file: ./ProdData2k.csv
+    vars:
+      reportedContent: Description
+      petitionUUID: Id
+      contentType: 'Petition_Details__r.Content_Type__c'
+
+# ─── Output ───────────────────────────────────────────────────────────────────
+# JSON is used here so that merge-results.ts can join on petitionUUID and attach
+# Response_* columns. Run merge-results.ts after the eval to produce the final
+# ProdData2k_results.csv (see README for full instructions).
+outputPath: ./promptfoo-proddata-results.json
