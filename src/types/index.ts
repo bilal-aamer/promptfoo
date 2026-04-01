@@ -6,6 +6,7 @@ import { BaseTokenUsageSchema } from '../types/shared';
 import { isJavascriptFile, JAVASCRIPT_EXTENSIONS } from '../util/fileExtensions';
 import { PromptConfigSchema, PromptSchema } from '../validators/prompts';
 import { ApiProviderSchema, ProviderOptionsSchema, ProvidersSchema } from '../validators/providers';
+
 export { ProvidersSchema };
 
 import { RedteamConfigSchema } from '../validators/redteam';
@@ -565,7 +566,9 @@ export const BaseAssertionTypesSchema = z.enum([
   'similar:euclidean',
   'starts-with',
   'tool-call-f1',
+  'skill-used',
   'trajectory:goal-success',
+  'trajectory:tool-args-match',
   'trajectory:step-count',
   'trajectory:tool-sequence',
   'trajectory:tool-used',
@@ -1030,7 +1033,7 @@ export const TestSuiteSchema = z.object({
               enabled: z.boolean(),
               port: z.number(),
               host: z.string().optional(),
-              acceptFormats: z.array(z.string()),
+              acceptFormats: z.array(z.enum(['protobuf', 'json'])).optional(),
             })
             .optional(),
           grpc: z
@@ -1170,7 +1173,7 @@ export const TestSuiteConfigSchema = z.object({
               enabled: z.boolean().prefault(true),
               port: z.number().prefault(4318),
               host: z.string().prefault('0.0.0.0'),
-              acceptFormats: z.array(z.enum(['protobuf', 'json'])).prefault(['json']),
+              acceptFormats: z.array(z.enum(['protobuf', 'json'])).prefault(['json', 'protobuf']),
             })
             .optional(),
           grpc: z
